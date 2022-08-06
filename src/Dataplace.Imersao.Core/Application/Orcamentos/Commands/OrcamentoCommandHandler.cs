@@ -31,6 +31,8 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Commands
         IRequestHandler<ExcluirItemCommand, bool>,
         IRequestHandler<AtribuirDataDePrevisaoEntregaAoOrcamentoCommand, bool>,
         IRequestHandler<RemoverDataDePrevisaoEntregaAoOrcamentoCommand, bool>
+        ,
+        IRequestHandler<AdiconarValidadeOrcamentoCommand, bool>
 
 
     {
@@ -322,6 +324,40 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Commands
             AddEvent(new DataDePrevisaoDeEntregaAtribuidaAoOrcamentoEvent(request.Item, request.DtPrevisaoEntrega));
             return Commit(transactionId);
         }
+
+
+
+        public async Task<bool> Handle(AdiconarValidadeOrcamentoCommand request, CancellationToken cancellationToken)
+        {
+            var transactionId = BeginTransaction();
+            var orcamento = _orcamentoRepository.ObterOrcamentoComItems(request.Item.CdEmpresa, request.Item.CdFilial, request.Item.NumOrcamento);
+            if (orcamento == null)
+            {
+                NotifyErrorValidation("notFound", "Orçamento não encontrado");
+                return false;
+            }
+
+            if (!orcamento.DefinirPrevisaoEntrega(request.Dtvalidade))
+            {
+                orcamento.Validation.Notifications.ToList().ForEach(val => NotifyErrorValidation(val.Property, val.Message));
+                return false;
+            }
+            orcamento.CalcularTotal();
+            if (!_orcamentoRepository.AtualizarOrcamento(orcamento))
+                NotifyErrorValidation("database", "Ocoreu um problema com a persistência dos dados");
+            foreach (var item in orcamento.Itens ?? new List<OrcamentoItem>())
+            {
+                if (!_orcamentoRepository.AtualizarItem(item))
+                {
+                    NotifyErrorValidation("database", "Ocoreu um problema com a persistência dos dados");
+                    break;
+                }
+            }
+
+            AddEvent(new DataDePrevisaoDeEntregaAtribuidaAoOrcamentoEvent(request.Item, request.Dtvalidade));
+            return Commit(transactionId);
+        }
+
 
         public async Task<bool> Handle(RemoverDataDePrevisaoEntregaAoOrcamentoCommand request, CancellationToken cancellationToken)
         {

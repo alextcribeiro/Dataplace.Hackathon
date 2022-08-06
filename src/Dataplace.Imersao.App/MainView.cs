@@ -18,7 +18,7 @@ namespace Dataplace.Imersao.App
         private readonly IEventAggregator _eventAggregator;
         public MainView(IEventAggregator eventAggregator)
         {
-            AddMenu(new ToolStripMenuItem("Cancelar/Fechar orçamentos em aberto", null, (object sender, EventArgs e) =>
+            AddMenu(new ToolStripMenuItem("Cancelar,Fechar e Reabrir orçamentos", null, (object sender, EventArgs e) =>
             {
                 Dataplace.Core.win.Views.Managers.ViewManager.ShowViewOnForm<CancelarFehacrOrcamentosView>();
             }), TipoMenuEnun.Ferramenta);

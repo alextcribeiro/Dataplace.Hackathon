@@ -66,6 +66,8 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
             // pegar evento clique das opçoes
             this.optCancelar.Click += opt_Click;
             this.optFechar.Click += opt_Click;
+            //this.optReabrir.Click +=opt_Click;
+            //this.dateTime.Click += 
 
 
             _startDate = DateTime.Today.AddMonths(-1);
@@ -74,6 +76,11 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
             rangeDate.Date2.Value = _endDate;
 
 
+
+            //busca por vendedores - metodo ja pronto da dataplace
+            dpiVendedor.SearchObject = Common.PedidoSearch.find_vendedor();
+
+            
             // pegar key down de um controle
             // dtpPrevisaoEntrega.KeyDown += Dtp_KeyDown;
 
@@ -94,13 +101,18 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
         {
             CancelarOrcamento,
             FecharOrcamento,
+            ReabrirOrcamento,
+            DefinirDataOrcamento
+
+            
+            
         }
         private void CancelamentoOrcamentoView_ToolConfiguration(object sender, ToolConfigurationEventArgs e)
         {
             // definições iniciais do projeto
             // item seguraça
             // engine code
-            this.Text = "Cancelar/Fechar orçamentos em aberto";
+            this.Text = "Cancelar,Fechar ou Reabrir orçamentos";
             e.SecurityIdList.Add(_itemSeg);
             e.CancelButtonVisisble = true;
         }
@@ -108,13 +120,24 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
         {
             // defaul 
             _tipoAcao = TipoAcaoEnum.CancelarOrcamento;
-
+             DateTime datav = default;
             if (optCancelar.Checked)
                 _tipoAcao = TipoAcaoEnum.CancelarOrcamento;
 
             if (optFechar.Checked)
                 _tipoAcao = TipoAcaoEnum.FecharOrcamento;
 
+            if (optReabrir.Checked)
+                _tipoAcao = TipoAcaoEnum.ReabrirOrcamento;
+
+            if (rbDefinirDataValidade.Checked)
+            {
+                datav = dateTime.Value;
+                _tipoAcao = TipoAcaoEnum.DefinirDataOrcamento;
+            }
+           
+
+            
 
 
             var permission = PermissionControl.Factory().ValidatePermission(_itemSeg, dpLibrary05.mGenerico.PermissionEnum.Execute);
@@ -135,12 +158,15 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
 
 
             e.Parameter.Items.Add("acao", _tipoAcao);
+
+            e.Parameter.Items.Add("datav", datav);
             e.Parameter.Items.Add("itensSelecionados", itensSelecionados);
         }
         private async void CancelamentoOrcamentoView_Process(object sender, ProcessEventArgs e)
         {
 
             var acao = (TipoAcaoEnum)e.Parameter.Items.get_Item("acao").Value;
+            var datav = (DateTime)e.Parameter.Items.get_Item("datav").Value;
             var itensSelecionados = (IEnumerable<OrcamentoViewModel>)e.Parameter.Items.get_Item("itensSelecionados").Value;
 
             e.ProgressMinimum = 0;
@@ -163,6 +189,15 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
                         // registrar log na parte de detalhes
                         e.LogBuilder.Items.Add($"Orçamento {item.NumOrcamento} fechado", dpLibrary05.Infrastructure.Helpers.LogBuilder.LogTypeEnum.Information);
                         break;
+                    case TipoAcaoEnum.ReabrirOrcamento:
+                        await ReabrirOrcamento(item);
+                        e.LogBuilder.Items.Add($"Orçamento {item.NumOrcamento} aberto", dpLibrary05.Infrastructure.Helpers.LogBuilder.LogTypeEnum.Information);
+                        break;
+                    case TipoAcaoEnum.DefinirDataOrcamento:
+                        await AdicionarDatadeValidade(item, datav);
+                        break;
+
+
                     default:
                         break;
                 }
@@ -181,7 +216,7 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
         private void CancelamentoOrcamentoView_AfterProcess(object sender, AfterProcessEventArgs e)
         {
             // exemplo de message box no final do processo
-            // this.Message.Info("MENSAGEM FINAL");
+            this.Message.Info("Processo concluido com sucesso!");
 
 
             //  desmarcar todos itens no final do processo
@@ -267,10 +302,11 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
             configuration.Ignore(x => x.CdFilial);
             configuration.Ignore(x => x.SqTabela);
             configuration.Ignore(x => x.CdTabela);
-            configuration.Ignore(x => x.CdVendedor);
+            //configuration.Ignore(x => x.CdVendedor);
             configuration.Ignore(x => x.DiasValidade);
-            configuration.Ignore(x => x.DataValidade);
+            //configuration.Ignore(x => x.DataValidade);
             configuration.Ignore(x => x.TotalItens);
+            
 
             configuration.Property(x => x.Situacao)
                   .HasMinWidth(100)
@@ -306,6 +342,15 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
                 .HasCaption("Fechamento")
                 .HasFormat("d");
 
+            configuration.Property(x => x.CdVendedor)
+                .HasMinWidth(80)
+                .HasCaption("cod Vendedor");
+
+            configuration.Property(x => x.DataValidade)
+                .HasMinWidth(80)
+                .HasCaption("Data Validade");
+
+
             return configuration;
         }
 
@@ -328,8 +373,12 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
             if (rangeDate.Date2.Value is DateTime d2)
                 dtFim = d2;
 
+            var cdvendedor = dpiVendedor.GetValue().ToString();
+
             var query = new OrcamentoQuery() { SituacaoList = situacaoList, DtInicio =  dtInicio, DtFim =  dtFim };
             return query;
+
+
         }
 
         #endregion
@@ -369,6 +418,10 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
             // exemplo pra deixar componente intaivo dependendo de uma opão
             // dtpPrevisaoEntrega.Enabled = optAtribuirPevisaoEntrega.Checked;
 
+             
+            
+
+
         }
         #endregion
 
@@ -378,7 +431,6 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
 
             using (var scope = dpLibrary05.Infrastructure.ServiceLocator.ServiceLocatorScoped.Factory())
             {
-
                 var command = new CancelarOrcamentoCommand(item);
                 var mediator = scope.Container.GetInstance<IMediatorHandler>();
 
@@ -418,7 +470,69 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
 
         }
 
+
+        private async Task ReabrirOrcamento(OrcamentoViewModel item)
+        {
+
+            using (var scope = dpLibrary05.Infrastructure.ServiceLocator.ServiceLocatorScoped.Factory())
+            {
+
+                var command = new ReabrirOrcamentoCommand(item);
+                var mediator = scope.Container.GetInstance<IMediatorHandler>();
+
+                var notifications = scope.Container.GetInstance<INotificationHandler<DomainNotification>>();
+                await mediator.SendCommand(command);
+
+                item.Result = Result.ResultFactory.New(notifications.GetNotifications());
+                if (item.Result.Success)
+                {
+                    item.Situacao = Core.Domain.Orcamentos.Enums.OrcamentoStatusEnum.Aberto.ToDataValue();
+                    //item.DtFechamento = DateTime.Now.Date;
+                }
+
+            }
+
+        }
+
+
+        private async Task AdicionarDatadeValidade(OrcamentoViewModel item, DateTime date)
+        {
+           
+            using (var scope = dpLibrary05.Infrastructure.ServiceLocator.ServiceLocatorScoped.Factory())
+            {
+
+                var command = new AdiconarValidadeOrcamentoCommand(item, date);
+                var mediator = scope.Container.GetInstance<IMediatorHandler>();
+
+                var notifications = scope.Container.GetInstance<INotificationHandler<DomainNotification>>();
+                await mediator.SendCommand(command);
+
+                item.Result = Result.ResultFactory.New(notifications.GetNotifications());
+                if (item.Result.Success)
+                {
+                    item.Situacao = Core.Domain.Orcamentos.Enums.OrcamentoStatusEnum.Aberto.ToDataValue();
+                    //item.DtFechamento = DateTime.Now.Date;
+                }
+
+            }
+
+        }
+
+
+
+
+
+
         #endregion
 
+        private void gridOrcamento_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void CancelarFehacrOrcamentosView_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

@@ -197,11 +197,13 @@ namespace Dataplace.Imersao.Core.Domain.Orcamentos
             Validation = new Dataplace.Core.Domain.DomainValidation.FluentValidator.Validation.ValidationContract();
             Validation.Requires()
                 .IsTrue(this.Situacao == OrcamentoStatusEnum.Aberto, nameof(Situacao), "Somente orçamentos abertos podem ter sua data de validade alterada");
+                
             if (!Validation.Valid)
                 return false;
 
             this.Validade = new OrcamentoValidade(this, validade);
             return true;
+            
         }
 
         public bool DefinirValidade(DateTime data)

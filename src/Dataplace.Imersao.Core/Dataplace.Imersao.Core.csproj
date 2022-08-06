@@ -93,6 +93,7 @@
     <Compile Include="Application\Behaviors\ValidationBehaviour.cs" />
     <Compile Include="Application\Orcamentos\Commands\AdicionarOrcamentoCommand.cs" />
     <Compile Include="Application\Orcamentos\Commands\AdicionarItemCommand.cs" />
+    <Compile Include="Application\Orcamentos\Commands\AdiconarValidadeOrcamentoCommand.cs" />
     <Compile Include="Application\Orcamentos\Commands\AtribuirDataDePrevisaoEntregaAoOrcamentoCommand.cs" />
     <Compile Include="Application\Orcamentos\Commands\AtualizarOrcamentoCommand.cs" />
     <Compile Include="Application\Orcamentos\Commands\AtualizarItemCommand.cs" />

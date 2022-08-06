@@ -12,6 +12,8 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Queries
         public IList<OrcamentoStatusEnum> SituacaoList { get; set; }
         public DateTime? DtInicio { get; set; }
         public DateTime? DtFim { get; set; }
+
+       
     }
 
 
