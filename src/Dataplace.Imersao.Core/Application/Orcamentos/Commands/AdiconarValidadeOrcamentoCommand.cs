@@ -12,10 +12,10 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Commands
     {
         public AdiconarValidadeOrcamentoCommand(OrcamentoViewModel item, DateTime dtvalidade) : base(item)
         {
-            Dtvalidade = dtvalidade;
+            item.DataValidade = dtvalidade;
         }
 
-        public DateTime Dtvalidade { get; }
+        //public DateTime Dtvalidade { get; }
     }
     
     

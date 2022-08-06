@@ -337,7 +337,7 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Commands
                 return false;
             }
 
-            if (!orcamento.DefinirPrevisaoEntrega(request.Dtvalidade))
+            if (!orcamento.DefinirPrevisaoEntrega((DateTime)request.Item.DataValidade))
             {
                 orcamento.Validation.Notifications.ToList().ForEach(val => NotifyErrorValidation(val.Property, val.Message));
                 return false;
@@ -354,7 +354,7 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Commands
                 }
             }
 
-            AddEvent(new DataDePrevisaoDeEntregaAtribuidaAoOrcamentoEvent(request.Item, request.Dtvalidade));
+            AddEvent(new DataDePrevisaoDeEntregaAtribuidaAoOrcamentoEvent(request.Item, (DateTime)request.Item.DataValidade));
             return Commit(transactionId);
         }
 

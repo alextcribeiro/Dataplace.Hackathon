@@ -87,6 +87,8 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Queries
 
             if(request.DtInicio.HasValue && request.DtFim.HasValue)
                 builder.Where("orcamento.DtOrcamento between @DtInicio AND @DtFim ", new { DtInicio = request.DtInicio.Value.Date, DtFim = request.DtFim.Value.Date.AddDays(1).AddSeconds(-1) });
+            if (!string.IsNullOrEmpty(request.Cdvendedor))
+                builder.Where($"orcamento.Cdvendador IN ('{request.Cdvendedor}')");
 
 
             builder.OrderBy("orcamento.DtOrcamento DESC");

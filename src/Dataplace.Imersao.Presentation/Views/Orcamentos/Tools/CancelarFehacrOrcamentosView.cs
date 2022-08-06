@@ -375,7 +375,7 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
 
             var cdvendedor = dpiVendedor.GetValue().ToString();
 
-            var query = new OrcamentoQuery() { SituacaoList = situacaoList, DtInicio =  dtInicio, DtFim =  dtFim };
+            var query = new OrcamentoQuery() { SituacaoList = situacaoList, DtInicio =  dtInicio, DtFim =  dtFim, Cdvendedor = cdvendedor };
             return query;
 
 
